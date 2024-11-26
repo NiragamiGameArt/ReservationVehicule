@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: vehicle_rentals
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - vehicle_network  # Spécifie un réseau personnalisé
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_HOST: db  # Nom du service db dans Docker
+      DATABASE_PORT: 3306
+      DATABASE_USERNAME: root  # Utilise le root
+      DATABASE_PASSWORD: example  # Le mot de passe défini dans db
+      DATABASE_NAME: vehicle_rentals  # Nom de la base de données
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    networks:
+      - vehicle_network  # Même réseau que la base de données
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - vehicle_network  # Même réseau
+
+volumes:
+  mysql-data:
+
+networks:
+  vehicle_network:  # Définir un réseau personnalisé
+    driver: bridge
